@@ -1,0 +1,20 @@
+# Minecraft 1.8.9 离线启动器配置示例
+# 复制为 config.toml 后按需修改
+
+# 游戏目录（存放 versions/ libraries/ assets/ natives/）
+# 用 "." 表示与 mclaunch.exe 同目录
+game_dir = "."
+
+# Java 可执行文件路径。1.8.x 必须用 Java 8！
+# 例：java = "C:\\Java\\jre1.8.0_421\\bin\\java.exe"
+java = "java"
+
+# 离线模式用户名（随便填）
+username = "Player"
+
+# 最大内存（MB）
+max_ram_mb = 2048
+
+# 版本与资源索引（一般无需改动）
+version = "1.8.9"
+asset_index = "1.8"

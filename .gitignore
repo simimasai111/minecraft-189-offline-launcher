@@ -1,2 +1,16 @@
+# 编译产物
 /target
-config.toml
+
+# 编译期自动生成的内置资源包（由 scripts/build_bundle.py 生成，不入库）
+/bundle
+/bundle.zip
+
+# 首次运行解压出的用户数据
+/mclaunch-data
+
+# 用户本地配置（保留示例）
+/config.toml
+
+# 系统文件
+Thumbs.db
+Desktop.ini

@@ -2,13 +2,14 @@
 name = "mclaunch"
 version = "1.0.0"
 edition = "2021"
-description = "Minecraft 1.8.9 离线启动器 (Rust) — 配置文件驱动，单文件 exe"
+description = "Minecraft 1.8.9 单文件离线启动器 (Rust) — 内置全部资源与 JRE，双击即玩"
 license = "MIT"
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 toml = "0.8"
+zip = "0.6"
 
 [[bin]]
 name = "mclaunch"

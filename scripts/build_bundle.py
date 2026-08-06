@@ -19,6 +19,8 @@ bundle.zip 内部结构：
     GAME_SRC=/path/to/minecraft-offline python scripts/build_bundle.py
     # 在 GitHub Actions 中全自动从 Mojang + Azul 拉取（无需 GAME_SRC）
     python scripts/build_bundle.py
+
+注意：运行期 print 一律用 ASCII（Windows runner 控制台为 cp1252，无法编码中文）。
 """
 
 import json
@@ -29,6 +31,13 @@ import zipfile
 import hashlib
 import subprocess
 import tempfile
+
+# 强制 stdout/stderr 为 UTF-8，避免 Windows runner 上 print 非 ASCII 报错
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
+except Exception:  # noqa: BLE001
+    pass
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # .../mclaunch
 BUNDLE_DIR = os.path.join(REPO_ROOT, "bundle")
@@ -80,7 +89,7 @@ def copy_game(game_root, src):
             if os.path.exists(d):
                 shutil.rmtree(d)
             shutil.copytree(s, d)
-    print("[ok] 已从本地拷贝游戏数据:", src)
+    print("[ok] copied local game data from:", src)
 
 
 def fetch_game(game_root):
@@ -97,7 +106,8 @@ def fetch_game(game_root):
 
     man_path = os.path.join(tempfile.gettempdir(), "mc_manifest.json")
     if not curl(MANIFEST, man_path):
-        print("[FAIL] 无法下载 version_manifest.json"); sys.exit(1)
+        print("[FAIL] cannot download version_manifest.json")
+        sys.exit(1)
     man = json.load(open(man_path))
     vurl = None
     for e in man["versions"]:
@@ -105,18 +115,21 @@ def fetch_game(game_root):
             vurl = e["url"]
             break
     if not vurl:
-        print("[FAIL] manifest 中找不到版本", VERSION); sys.exit(1)
+        print("[FAIL] version not found in manifest:", VERSION)
+        sys.exit(1)
 
     vjson = os.path.join(ver, VERSION + ".json")
     if not curl(vurl, vjson):
-        print("[FAIL] 无法下载版本 json"); sys.exit(1)
+        print("[FAIL] cannot download version json")
+        sys.exit(1)
     v = json.load(open(vjson))
 
     cj = v["downloads"]["client"]["url"]
     cjdest = os.path.join(ver, VERSION + ".jar")
     if not curl(cj, cjdest):
-        print("[FAIL] 无法下载客户端 jar"); sys.exit(1)
-    print("[ok] client jar 已下载")
+        print("[FAIL] cannot download client jar")
+        sys.exit(1)
+    print("[ok] client jar downloaded")
 
     artifact_jars = []
     native_jars = []
@@ -129,9 +142,11 @@ def fetch_game(game_root):
             dest = os.path.join(lib, path)
             if not (os.path.exists(dest) and sha1(dest) == art.get("sha1", "")):
                 if not curl(url, dest):
-                    print("[FAIL] lib", path); sys.exit(1)
+                    print("[FAIL] lib", path)
+                    sys.exit(1)
             if art.get("sha1") and sha1(dest) != art["sha1"]:
-                print("[SHA1 MISMATCH] lib", path); sys.exit(1)
+                print("[SHA1 MISMATCH] lib", path)
+                sys.exit(1)
             artifact_jars.append(dest)
         natives = lib_entry.get("natives", {})
         win = natives.get("windows")
@@ -143,7 +158,8 @@ def fetch_game(game_root):
                 dest = os.path.join(lib, path)
                 if not (os.path.exists(dest) and os.path.getsize(dest) > 0):
                     if not curl(url, dest):
-                        print("[FAIL] native", path); sys.exit(1)
+                        print("[FAIL] native", path)
+                        sys.exit(1)
                 native_jars.append(dest)
                 exclude = lib_entry.get("extract", {}).get("exclude", [])
                 with zipfile.ZipFile(dest) as z:
@@ -152,12 +168,13 @@ def fetch_game(game_root):
                             n.startswith(e) for e in exclude
                         ):
                             z.extract(n, nat)
-    print("[ok] 依赖: %d 个 artifact, %d 个 native jar" % (len(artifact_jars), len(native_jars)))
+    print("[ok] libs: %d artifacts, %d native jars" % (len(artifact_jars), len(native_jars)))
 
     idx_url = v["assetIndex"]["url"]
     idx_path = os.path.join(idx, ASSET_ID + ".json")
     if not curl(idx_url, idx_path):
-        print("[FAIL] 无法下载资源索引"); sys.exit(1)
+        print("[FAIL] cannot download asset index")
+        sys.exit(1)
     idxj = json.load(open(idx_path))
     objs = idxj.get("objects", {})
     base = "https://resources.download.minecraft.net"
@@ -172,14 +189,15 @@ def fetch_game(game_root):
             fail += 1
             continue
         done += 1
-    print("[ok] 资源对象: %d 成功, %d 失败" % (done, fail))
+    print("[ok] asset objects: %d ok, %d failed" % (done, fail))
 
 
 def fetch_jre(jre_dir):
     os.makedirs(jre_dir, exist_ok=True)
     apij = os.path.join(tempfile.gettempdir(), "azul.json")
     if not curl(AZUL_API, apij):
-        print("[FAIL] 无法访问 Azul API"); sys.exit(1)
+        print("[FAIL] cannot reach Azul API")
+        sys.exit(1)
     pkgs = json.load(open(apij))
     url = None
     for p in pkgs:
@@ -202,11 +220,13 @@ def fetch_jre(jre_dir):
                 url = p["download_url"]
                 break
     if not url:
-        print("[FAIL] 未找到合适的 JRE 8 包"); sys.exit(1)
-    print("[jre] 下载:", url)
+        print("[FAIL] no suitable JRE 8 package found")
+        sys.exit(1)
+    print("[jre] download:", url)
     zpath = os.path.join(tempfile.gettempdir(), "zulu_jre.zip")
     if not curl(url, zpath):
-        print("[FAIL] 无法下载 JRE"); sys.exit(1)
+        print("[FAIL] cannot download JRE")
+        sys.exit(1)
     with zipfile.ZipFile(zpath) as z:
         names = z.namelist()
         top = names[0].split("/")[0] if names else ""
@@ -222,12 +242,13 @@ def fetch_jre(jre_dir):
                 shutil.copyfileobj(src, dst)
     java_exe = os.path.join(jre_dir, "bin", "java.exe")
     if not os.path.exists(java_exe):
-        print("[FAIL] 解压后找不到", java_exe); sys.exit(1)
-    print("[ok] JRE 8 已解压至", jre_dir)
+        print("[FAIL] java.exe not found after extract:", java_exe)
+        sys.exit(1)
+    print("[ok] JRE 8 extracted to", jre_dir)
 
 
 def make_zip():
-    print("[zip] 正在打包 bundle.zip ...")
+    print("[zip] building bundle.zip ...")
     if os.path.exists(BUNDLE_ZIP):
         os.remove(BUNDLE_ZIP)
     with zipfile.ZipFile(BUNDLE_ZIP, "w", zipfile.ZIP_DEFLATED) as z:

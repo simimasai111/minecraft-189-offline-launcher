@@ -16,8 +16,16 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Build offline bundle (game + JRE)
+        run: python scripts/build_bundle.py
+
+      - name: Verify bundle exists
+        run: |
+          if (!(Test-Path bundle.zip)) { Write-Error "bundle.zip 未生成"; exit 1 }
+          (Get-Item bundle.zip).Length / 1MB
+
       - name: Build release
-        run: cargo build --release --locked
+        run: cargo build --release
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4

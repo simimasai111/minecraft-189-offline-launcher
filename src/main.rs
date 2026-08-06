@@ -153,7 +153,7 @@ fn setup(game_dir: &str, version: &str, asset_index: &str) -> Result<(), String>
                 let p = art
                     .path
                     .clone()
-                    .unwrap_or_else(|| art.url.rsplit('/', 1).next().unwrap().to_string());
+                    .unwrap_or_else(|| art.url.rsplit('/').next().unwrap().to_string());
                 let dest = lib_dir.join(&p);
                 tasks.push((art.url.clone(), dest.to_str().unwrap().to_string()));
             }
@@ -173,7 +173,7 @@ fn setup(game_dir: &str, version: &str, asset_index: &str) -> Result<(), String>
                             let p = art
                                 .path
                                 .clone()
-                                .unwrap_or_else(|| art.url.rsplit('/', 1).next().unwrap().to_string());
+                                .unwrap_or_else(|| art.url.rsplit('/').next().unwrap().to_string());
                             let dest = lib_dir.join(&p);
                             download(&art.url, dest.to_str().unwrap())?;
                             native_pkgs.push(dest);

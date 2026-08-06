@@ -16,10 +16,11 @@ mclaunch setup    # 首次：下载客户端、依赖库、原生文件、资源
 mclaunch          # 启动游戏（默认）
 ```
 
-1. 把 `config.toml.example` 复制为 `config.toml`，按需修改（尤其是 `java` 指向 Java 8）。
-2. 安装 **Java 8**（1.8.x 必须用 Java 8 运行）。
-3. 运行 `mclaunch setup` 完成离线资源下载（只需一次，之后断网也能玩）。
-4. 双击 `mclaunch.exe`（或直接 `mclaunch`）启动。
+1. 把 `config.toml.example` 复制为 `config.toml`，按需修改。
+2. 运行 `mclaunch setup` 完成离线资源下载，**并自动下载一个捆绑的便携 JRE 8 到 `jre/`**（只需一次，之后断网也能玩）。
+3. 双击 `mclaunch.exe`（或直接 `mclaunch`）启动——**无需在系统里单独安装 Java**，启动器会优先使用 `jre/` 里的捆绑 JRE。
+
+> 如果你更想用系统已装的 Java 8，在 `config.toml` 的 `java` 字段写完整路径即可，启动器会优先采用。
 
 ## 配置文件（config.toml）
 

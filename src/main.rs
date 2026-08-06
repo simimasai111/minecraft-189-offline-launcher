@@ -312,6 +312,13 @@ fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mode = args.get(1).map(|s| s.as_str()).unwrap_or("launch");
 
+    // 启动时先打印横幅，确保双击也能立刻看到控制台
+    println!("==============================================");
+    println!(" Minecraft 1.8.9 离线启动器 (Rust)");
+    println!(" 用法: mclaunch setup  (首次下载离线资源)");
+    println!("       mclaunch        (直接启动游戏)");
+    println!("==============================================");
+
     let cfg = load_config();
     let game_dir = cfg.game_dir.clone().unwrap_or_else(|| ".".into());
     let java = cfg.java.clone().unwrap_or_else(|| "java".into());
@@ -320,13 +327,23 @@ fn main() {
     let version = cfg.version.clone().unwrap_or_else(|| "1.8.9".into());
     let asset_index = cfg.asset_index.clone().unwrap_or_else(|| "1.8".into());
 
-    let result = match mode {
+    let result: Result<(), String> = match mode {
         "setup" => setup(&game_dir, &version, &asset_index),
         "launch" | _ => launch(&game_dir, &java, &username, max_ram, &version, &asset_index),
     };
 
-    if let Err(e) = result {
-        eprintln!("[错误] {}", e);
-        std::process::exit(1);
+    match &result {
+        Ok(()) => println!("\n[完成] 操作成功。"),
+        Err(e) => eprintln!("\n[错误] {}", e),
     }
+
+    // 等待用户按键再退出，避免双击运行时窗口一闪而过、看不到输出
+    println!("按回车键退出...");
+    let mut buf = String::new();
+    let _ = std::io::stdin().read_line(&mut buf);
+
+    std::process::exit(match &result {
+        Ok(()) => 0,
+        Err(_) => 1,
+    });
 }

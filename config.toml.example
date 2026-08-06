@@ -1,17 +1,13 @@
-# Minecraft 1.8.9 离线启动器配置示例
-# 复制为 config.toml 后按需修改
-
-# 游戏目录（存放 versions/ libraries/ assets/ natives/ jre/）
-# 用 "." 表示与 mclaunch.exe 同目录
-game_dir = "."
+# Minecraft 1.8.9 单文件离线启动器配置示例
+# 复制为 config.toml 后按需修改（全部可选，缺省即默认值）
 
 # Java 路径解析顺序：
 #   1) 这里显式指定的 java（若设置了且是 Java 8）
-#   2) game_dir/jre/bin/java.exe（运行 `mclaunch setup` 自动下载的捆绑 JRE）
+#   2) 启动器内置的捆绑 JRE（打进 exe 里的 jre/，已自动随包提供）
 #   3) 系统 PATH 里的 java
-# 想强制用某个 Java 8，就在这里写完整路径，例如：
+# 默认 "java" 即可：启动器会优先使用内置捆绑 JRE，无需在系统里装 Java。
+# 想强制用某个系统 Java 8，写完整路径，例如：
 # java = "C:\\Java\\jre1.8.0_421\\bin\\java.exe"
-# 留 "java" 即可让启动器优先使用 setup 下载的捆绑 JRE。
 java = "java"
 
 # 离线模式用户名（随便填）
@@ -19,7 +15,3 @@ username = "Player"
 
 # 最大内存（MB）
 max_ram_mb = 2048
-
-# 版本与资源索引（一般无需改动）
-version = "1.8.9"
-asset_index = "1.8"
